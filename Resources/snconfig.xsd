@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  targetNamespace="https://sourceforge.net/projects/spacenavdrvr/"
+  xmlns="https://sourceforge.net/projects/spacenavdrvr/"
+  elementFormDefault="qualified">
+
+  <xs:element name="snConfig" type="snConfig"/>
+
+  <xs:complexType name="snConfig">
+  	<xs:sequence>
+	    <xs:element name="devices" type="devices" maxOccurs="1"/>
+	    <xs:element name="deviceContexts" type="deviceContexts" maxOccurs="1"/>
+	    <xs:element name="contexts" type="contexts" maxOccurs="1"/>
+	    <xs:element name="actions" type="actions" maxOccurs="1"/>
+	  </xs:sequence>
+	  <xs:attribute name="gestureTimeVariance" type="xs:unsignedShort" use="optional"/>
+  </xs:complexType>
+
+	<xs:complexType name="devices">
+    <xs:choice>
+      <xs:element name="mouse" type="device" maxOccurs="unbounded"/>
+      <xs:element name="hid" type="hidDevice" maxOccurs="unbounded"/>
+		</xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="deviceContexts">
+    <xs:sequence>
+      <xs:element name="deviceContext" type="deviceContext" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="hidDevice">
+    <xs:complexContent>
+      <xs:extension base="device">
+        <xs:sequence>
+          <xs:element name="command" type="hidCommand" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="vid" type="xs:integer"/>
+        <xs:attribute name="pid" type="xs:integer"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="device">
+    <xs:attribute name="name" type="xs:string"/>
+  </xs:complexType>
+
+  <xs:complexType name="hidCommand">
+    <xs:attribute name="name" type="xs:string"/>
+    <xs:attribute name="report" type="xs:integer"/>
+    <xs:attribute name="value" type="xs:integer"/>
+  </xs:complexType>
+
+  <xs:complexType name="deviceContext">
+    <xs:sequence>
+      <xs:element name="axe" type="axe" maxOccurs="unbounded"/>
+      <xs:element name="buttons" type="buttons" maxOccurs="1"/>
+      <xs:element name="gesture" type="gesture" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string"/>
+    <xs:attribute name="device" type="xs:string"/>
+    <xs:attribute name="gestures" type="xs:boolean" use="optional"/>
+  </xs:complexType>
+
+  <xs:complexType name="gesture">
+    <xs:choice>
+      <xs:element name="motion" type="motion" maxOccurs="unbounded"/>
+      <xs:element name="wait" type="wait" maxOccurs="unbounded"/>
+  	</xs:choice>
+  	<xs:attribute name="action" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="motion">
+    <xs:attribute name="position">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="positive"/>
+          <xs:enumeration value="center"/>
+          <xs:enumeration value="negative"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="axe" type="xs:unsignedShort"/>
+  </xs:complexType>
+
+  <xs:complexType name="wait">
+    <xs:attribute name="length" type="xs:unsignedShort"/>
+  </xs:complexType>
+
+  <xs:complexType name="axe">
+    <xs:attribute name="simulateMouseMove" use="optional">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="x"/>
+          <xs:enumeration value="y"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="threshold" type="xs:unsignedShort" use="required"/>
+    <xs:attribute name="divisor" type="xs:unsignedShort" use="optional"/>
+    <xs:attribute name="type" use="optional">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="binary"/>
+          <xs:enumeration value="linear"/>
+          <xs:enumeration value="exponential"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="startPulse" type="xs:unsignedShort" use="optional"/>
+    <xs:attribute name="endPulse" type="xs:unsignedShort" use="optional"/>
+    <xs:attribute name="posAction" type="xs:string" use="required"/>
+    <xs:attribute name="negAction" type="xs:string" use="required"/>
+    <xs:attribute name="sendCenter" type="xs:string" use="optional"/>
+  </xs:complexType>
+
+  <xs:complexType name="buttons">
+    <xs:sequence>
+      <xs:element name="button" type="button" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="button">
+    <xs:attribute name="simulateMouseButton" use="optional">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="left"/>
+          <xs:enumeration value="right"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="upAction" type="xs:string" use="required"/>
+    <xs:attribute name="downAction" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="contexts">
+    <xs:sequence>
+      <xs:element name="context" type="context" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="context">
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:attribute name="deviceContext" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="actions">
+    <xs:choice>
+      <xs:element name="sendCopyDataWindowMessage" type="sendCopyDataWindowMessage" maxOccurs="unbounded"/>
+      <xs:element name="sendCommandWindowMessage" type="sendCommandWindowMessage" maxOccurs="unbounded"/>
+      <xs:element name="execute" type="execute" maxOccurs="unbounded"/>
+      <xs:element name="keyPress" type="keyPress" maxOccurs="unbounded"/>
+      <xs:element name="macro" type="macro" maxOccurs="unbounded"/>
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="sendCopyDataWindowMessage">
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:attribute name="window" type="xs:string" use="optional"/>
+    <xs:attribute name="windowClass" type="xs:string" use="optional"/>
+    <xs:attribute name="message" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="sendCommandWindowMessage">
+  	<xs:attribute name="name" type="xs:string" use="required"/>
+	  <xs:attribute name="window" type="xs:string" use="optional"/>
+	  <xs:attribute name="windowClass" type="xs:string" use="optional"/>
+	  <xs:attribute name="message" type="xs:unsignedInt" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="execute">
+  	<xs:attribute name="name" type="xs:string" use="required"/>
+  	<xs:attribute name="executable" type="xs:string" use="required"/>
+  	<xs:attribute name="commandline" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="keyPress">
+    <xs:sequence>
+      <xs:element name="key" type="key" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="key">
+  	<xs:attribute name="keyCode" type="xs:unsignedShort" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="macro">
+  	<xs:sequence>
+  	  <xs:element name="action" type="action" maxOccurs="unbounded"/>
+  	</xs:sequence>
+  	<xs:attribute name="name" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="action">
+    <xs:attribute name="name" type="xs:string" use="required"/>
+  </xs:complexType>
+</xs:schema>

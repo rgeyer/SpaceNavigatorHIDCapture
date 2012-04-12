@@ -1,0 +1,18 @@
+* Add actions to perform on join/leave of a context
+* Possibly "lock" an axis so that only input on that axis is accepted once it's past it's threshold
+* Flesh-out generic HID to support other devices
+	- Have it auto detect number of axis and buttons
+	- Determine if all axis are reported the same, or if the input report describes how to extract data
+		- It appears that the "feature" report describes the format of the input reports.
+* Provide a more "direct" way to context switch internally, instead of requiring a window message be sent and received by the same app
+* Make threshold in percent of screen, rather than pixels for Mouse Capture Device
+* Consider adding a "snap to center" function for the Mouse Capture Device
+* Figure out and/or fix the sequencing for the Macro actions -- Probably caused by issue described below.
+* Replace std::map with some other mechanism that can maintain the order of the items, but still have a lookup key.  -- Post #284
+* Investigate reversed direction for axes simulating mouse movement.
+
+*** Create a configuration app, that helps (or completely handles) write config.xml file(s)
+
+
+--- DONE ---
+* Add a "Global" context that is always executed before the currently selected context.  Useful for always switching to/from a particular context when a particular button is pushed, without adding that action to each context.

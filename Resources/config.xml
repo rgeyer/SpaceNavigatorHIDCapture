@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="utf-8"?>
+<snConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="https://sourceforge.net/projects/spacenavdrvr/">
+<!-- Devices are actual physical input devices.
+
+There are two "types" of device.
+
+- mouse: This will capture input from your mouse/pointer
+- hid: This is any generic HID device.  You MUST provide the vendor ID, and product ID of the device
+
+Note: Only the SpaceNavigator works right now, generic HID support is still in development.
+Note: A mouse device will only track axis movement when one or more buttons of the mouse are depressed
+This is to prevent actions and gestures from occuring from "normal" mouse movement not intended to
+activate an action.
+-->
+
+  <devices>
+    <hid name="SpaceNavigator" vid="0x046D" pid="0xC626">
+      <command name="Led On" report="0x0004" value="0x0001"/>
+      <command name="Led Off" report="0x0004" value="0x0000"/>
+    </hid>
+  </devices>
+  
+<!-- A device context maps a devices motions to actions defining several parameters.
+
+The bulk of the configuration happens here.
+
+GESTURES
+The device context node is where you define gestures by adding the gestures="true" attribute
+to the device context node.  (See "Mouse Gestures" device context below).
+
+A gesture node, which can only be a child of a device context defined as gestures="true", can
+contain two child nodes.
+
+1) a "motion" node which defines a motion.
+2) a "wait" node which defines a wait period between motions
+
+If a device is "held" past is threshold on a particular axis for more than 1 second, the same
+gesture motion will be sent again.  So a gesture that recognizes a "held" axe would detect
+the motion, then a 1 second wait, then the same motion again.
+
+An axe, defined in a device context node must have a "sendCenter" attribute, indicating if
+a "center" gesture should be sent by the axis.
+
+AXES
+
+For each device context, each axis can either perform an action, or simulate mouse movement.
+
+Axes are identifed by their number, and order.  For instance a mouse has two axes 0 and 1, and
+those axes are configured by the order of their nodes in the config file.
+
+The SpaceNavigators axes are as follows:
+
+- 0: Pan Left/Right
+- 1: Pan Forward/Back
+- 2: Push/Pull
+- 3: Tilt Forward/Back
+- 4: Tilt Left/Right
+- 5: Twist
+
+To simulate mouse movement the syntax is as follows
+
+      <axe simulateMouseMove="{x/y}"
+        threshold="{unsigned int}"
+        divisor="{unsigned int}" />
+
+Where "simulateMouseMove" is either x or y depending on the mouse axis you want to
+simulate, "threshold" is how far along the axis (in either direction) the devices axis
+should travel before the mouse starts moving, and "divisor" is the the divisor
+in the following equation.
+
+newMousePositionOnAxis = currentMousePositionOnAxis + currentDeviceAxisValue/divisor
+
+To perform an action the syntax is as follows
+
+      <axe threshold="{unsigned int}"
+        type="binary/linear/exponential"
+        startPulse="{unsigned int}"
+        endPulse="{unsigned int}"
+        posAction="{name attribute value of one of the action nodes}"
+        negAction="{name attribute value of one of the aciton nodes}" />
+        
+Where "threshold" is how far along the axis (in either direction) the SN should
+travel before performing the action, "type" is binary to perform the action once,
+linear to perform the action repeatedly at some rate between "startPulse" and
+"endPulse" increased in a linear fashion in relation to the SN value, and exponential
+to perform the action repeatedly in an exponetial fashion in relation to the devices
+axis value.
+
+BUTTONS
+
+There has to be a <button /> element for every button on the device.  In
+the case of the SpaceNavigator, there are two, for other (not yet supported)
+devices, there are more.
+
+You can simulate a mouse button with the following syntax.  The only valid
+buttons are "left" or "right"
+
+        <button simulateMouseButton="left" />
+        <button simulateMouseButton="right" />
+        
+You can perform actions either on pressing, or releasing (or both) of the
+button with the following syntax
+
+        <button downAction="RR Volume Down"
+          upAction="" />
+        <button downAction="RR Volume Up"
+          upAction="" />
+-->
+
+  <deviceContexts>
+    <deviceContext name="Mouse" device="SpaceNavigator">
+      <axe threshold="50" type="binary" posAction="" negAction=""/>
+      <axe threshold="50" type="binary" posAction="" negAction=""/>
+      <axe threshold="50" type="binary" posAction="" negAction=""/>
+      <axe simulateMouseMove="y"
+        threshold="50"
+        divisor="10"/>
+      <axe simulateMouseMove="x"
+        threshold="50"
+        divisor="10"/>
+      <axe threshold="50" type="binary" posAction="" negAction=""/>
+      <buttons>
+        <button simulateMouseButton="left"/>
+        <button simulateMouseButton="right"/>
+      </buttons>
+    </deviceContext>
+    <deviceContext name="SpaceNavigator" device="SpaceNavigator">
+      <axe threshold="50" type="binary" posAction="" negAction=""/>
+      <axe threshold="50" type="binary" posAction="" negAction=""/>
+      <axe threshold="50" type="binary" posAction="" negAction=""/>
+      <axe threshold="50" type="binary" posAction="" negAction=""/>
+      <axe threshold="50" type="binary" posAction="" negAction=""/>
+      <axe threshold="80"
+        type="linear"
+        startPulse="2"
+        endPulse="6"
+        posAction="RR Volume Up"
+        negAction="RR Volume Down" />
+      <buttons>
+        <button downAction="Led On"
+          upAction="" />
+        <button downAction="Led Off"
+          upAction="" />
+      </buttons>
+    </deviceContext>
+  </deviceContexts>
+  
+<!-- Contexts are used to map one or more device contexts into top level, switchable
+context.  When you switch contexts, this is what you're switching.
+
+If you name your context "Global" that context will be executed ALWAYS, and in addition
+to whatever context you may be in.  This can be useful for setting a "Global" context for
+switching contexts based on pushing buttons of a device etc.
+
+-->
+  <contexts>
+    <context name="Default"
+      deviceContext="Mouse" />
+    <context name="SpaceNavigator"
+      deviceContext="SpaceNavigator" />
+  </contexts>
+  
+  
+<!-- Possible action types (node names) are as follows.
+
+sendWindowMessage -  There are two types of send Window Message
+	CopyData - Sends the string supplied in the message attribute to
+  	the window specified in the window attribute.  The string is sent as the
+  	lpData of a WM_COPYDATA lParam.  This is what RoadRunner expects as input.
+  	
+  	Command - Sends the unsigned integer supplied in the message attribute to
+  	the window specified in the window attribute.  These are sent as WM_COMMAND
+  	messages.
+  
+  The sendWindowMessage can either have a "window" attribute, or a "windowClass"
+  attribute.  If the "window" attribute exists, the window will be found by it's
+  exact name.  If the "windowClass" attribute exists, the window will be found by
+  it's class name.
+
+execute - Executes the executable referred to in the executable attribute,
+  passing any parameters supplied in the commandline attribute.  The value
+  for the executable attribute must be the full (not relative) path to the
+  executable.
+  
+keyPress - Presses, and releases the keys specified in the <key> sub nodes.
+  The value for each <key> subnode must be the "virtual key code" of the key
+  you wish to press.  A utility will eventually be built to grab these and
+  either write to the config file, or provide the key code for manual input.
+  
+macro - Executes the list of actions.  The attribute "type" defines the way the
+  actions are executed.  If "all" then all actions are executed.  If "sequence" then
+  the next action in the list is executed.  This creates a behavior of the same "action"
+  performing different things, in a loop.
+  
+  The syntax is as follows.
+  <macro type="all/sequence">
+    <action name="Launch Notepad"/>
+    <action name="Copy"/>
+  </macro>
+  
+  !!!IMPORTANT!!! - Any macros must be defined at the END of the list of actions, otherwise
+  the actions which are referenced, won't exist in the application yet.
+-->
+  
+  <actions>
+    <sendWindowMessage name="Context Up"
+      type="CopyData"
+      window="SpaceNavigatorDriver"
+      message="CONTEXT;Up"/>
+    <sendWindowMessage name="Context Down"
+      type="CopyData"
+      window="SpaceNavigatorDriver"
+      message="CONTEXT;Down"/>
+    <sendWindowMessage name="Placeholder"
+      type="CopyData"
+      window="RoadRunner"
+      message="Random"/>
+    <sendWindowMessage name="RR Volume Up"
+      type="CopyData"
+      window="RoadRunner"
+      message="VOL+"/>
+    <sendWindowMessage name="RR Volume Down"
+      type="CopyData"
+      window="RoadRunner"
+      message="VOL-"/>
+    <execute name="Launch Notepad"
+      executable="c:\windows\system32\notepad.exe"
+      commandline=""/>
+    <keyPress name="Copy">
+      <key>17</key>
+      <key>67</key>
+    </keyPress>
+    <keyPress name="Paste">
+      <key>17</key>
+      <key>86</key>
+    </keyPress>
+    
+    <sendWindowMessage name="Led On"
+      type="CopyData"
+      window="SpaceNavigatorDriver"
+      message="HID;SpaceNavigator;Led On"/>
+    <sendWindowMessage name="Led Off"
+      type="CopyData"
+      window="SpaceNavigatorDriver"
+      message="HID;SpaceNavigator;Led Off"/>
+  </actions>
+</snConfig>
